@@ -1,0 +1,34 @@
+.App-top-half{
+
+    display:flex;
+    flex-direction: row;
+    align-items: flex-start;
+    color:black;
+    border-color: #282c34;
+    border-width: 0px;
+    border-top: 3px;
+    border-bottom: 3px;
+    border-style:solid;
+    justify-items: left;
+   
+
+  }
+  
+  .App-instrument-panel{
+  
+    background-color:#FFDD7E;
+    font-size: calc(4px + 1vmin);
+    height:35vh;
+    width:25vw;
+    display:inline-grid;
+    padding:0%;
+  }
+
+  .App-new-panel{
+    justify-content: center;
+    align-content: center;
+    background-color:lightgray;
+    
+    height:35vh;
+    width: 25vw;
+  }

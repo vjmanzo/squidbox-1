@@ -1,14 +1,23 @@
 import './App.css';
+import TopPanel from './TopPanel';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <p>
-          Squidbox
-        </p>
+    
+        Squidbox
+        
+
       </header>
+
+      <TopPanel />
+
     </div>
+
+    
+
+
   );
 }
 
