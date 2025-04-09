@@ -1,5 +1,6 @@
 import './App.css';
 import TopPanel from './TopPanel';
+import BottomPanel from './BottomPanel'
 
 function App() {
   return (
@@ -12,6 +13,8 @@ function App() {
       </header>
 
       <TopPanel />
+
+      <BottomPanel />
 
     </div>
 

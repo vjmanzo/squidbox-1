@@ -1,0 +1,24 @@
+
+.App-bottom-panel{
+
+    
+    align-items:center;
+    display:grid;
+    
+
+}
+
+.keyboard{
+
+    position:fixed;
+    bottom:0%;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    
+}
+
+.buttons{
+    padding:3px;
+    margin: 10px;
+}
