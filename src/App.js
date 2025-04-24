@@ -7,11 +7,10 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">Squidbox</header>
-
-      <TopPanel />
-
-      <BottomPanel />
-
+      <main className="App-main">
+        <TopPanel />
+        <BottomPanel />
+      </main>
       {false && <AgentDemo />}
     </div>
   );

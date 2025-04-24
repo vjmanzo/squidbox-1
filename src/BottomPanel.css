@@ -1,24 +1,64 @@
-
-.App-bottom-panel{
-
-    
-    align-items:center;
-    display:grid;
-    
-
+.App-bottom-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 32px;
 }
 
-.keyboard{
-
-    position:fixed;
-    bottom:0%;
-    left: 50%;
-    transform: translateX(-50%);
-    
-    
+.keyboard-container {
 }
 
-.buttons{
-    padding:3px;
-    margin: 10px;
+/* .keyboard .ReactPiano__Key--accidental { */
+/*   background: #025d7d; */
+/*   border: 1px solid #888; */
+/* } */
+/* .keyboard .ReactPiano__Key--natural { */
+/*   background: #013243; */
+/*   border: 1px solid #888; */
+/*   margin-right: 0; */
+/* } */
+/* .keyboard .ReactPiano__Key--active.ReactPiano__Key--accidental { */
+/*   background: #0396ca; */
+/* } */
+/* .keyboard .ReactPiano__Key--active.ReactPiano__Key--natural { */
+/*   background: #0396ca; */
+/* } */
+
+.buttons {
+  padding: 3px;
+  margin: 10px;
+}
+
+.piano {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.squidbox-buttons-container {
+  display: flex;
+  gap: 8px;
+}
+
+.piano-config {
+  /* align to center */
+  max-width: 600px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.note-selection,
+.instrument-selection {
+  flex: 1 1 30%;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.keyboard-shortcut-info {
+  margin: 8px 0;
+  flex: 1 1 100%;
+  text-align: center;
 }
