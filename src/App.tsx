@@ -2,6 +2,9 @@ import "./App.css";
 import AgentDemo from "./AgentDemo";
 import TopPanel from "./TopPanel";
 import BottomPanel from "./BottomPanel";
+import { Button } from "@/components/ui/button";
+
+const shouldShowAgentDemo = false;
 
 function App() {
   return (
@@ -11,7 +14,10 @@ function App() {
         <TopPanel />
         <BottomPanel />
       </main>
-      {false && <AgentDemo />}
+      {shouldShowAgentDemo && <AgentDemo />}
+      <div className="flex flex-col items-center justify-center min-h-svh">
+        <Button>Click me</Button>
+      </div>
     </div>
   );
 }

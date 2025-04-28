@@ -15,4 +15,3 @@ const TopPanel = () => {
 };
 
 export default TopPanel;
-

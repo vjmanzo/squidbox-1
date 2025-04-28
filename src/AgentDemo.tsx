@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Daemon from "arduino-create-agent-js-client";
 
 const chromeExtensionID = "hfejhkbipnickajaidoppbadcomekkde";
 const isChromeOs = () => window.navigator.userAgent.indexOf(" CrOS ") !== -1;
 
-const scrollToBottom = (target) => {
+const scrollToBottom = (target: HTMLElement | null) => {
   if (target) target.scrollTop = target.scrollHeight;
 };
 
@@ -25,12 +25,12 @@ const AgentDemo = () => {
   const [supportedBoards, setSupportedBoards] = useState([]);
   const [error, setError] = useState("");
 
-  const serialTextareaRef = useRef(null);
-  const serialInputRef = useRef(null);
+  const serialTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const serialInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const subs = [
-      daemon.agentFound.subscribe((status) => {
+      daemon.agentFound.subscribe((status: boolean) => {
         setAgentStatus(status);
         setAgentInfo(JSON.stringify(daemon.agentInfo, null, 2));
       }),
@@ -42,7 +42,7 @@ const AgentDemo = () => {
         setNetworkDevices(network);
       }),
       daemon.supportedBoards.subscribe(setSupportedBoards),
-      daemon.serialMonitorMessages.subscribe((message) => {
+      daemon.serialMonitorMessages.subscribe((message: string) => {
         setSerialMonitorContent((prev) => {
           const updated = prev + message;
           requestAnimationFrame(() =>
@@ -67,25 +67,25 @@ const AgentDemo = () => {
     }
   };
 
-  const showError = (err) => {
+  const showError = (err: string) => {
     setError(err);
     scrollToBottom(document.body);
   };
 
-  const handleOpen = (e, port) => {
+  const handleOpen = (e: React.MouseEvent, port: string) => {
     e.preventDefault();
     setSerialMonitorContent("");
     daemon.openSerialMonitor(port, 9600);
     setSerialPortOpen(port);
   };
 
-  const handleClose = (e, port) => {
+  const handleClose = (e: React.MouseEvent, port: string) => {
     e.preventDefault();
     daemon.closeSerialMonitor(port);
     setSerialPortOpen(null);
   };
 
-  const handleSend = (e) => {
+  const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     daemon.writeSerial(serialPortOpen, `${serialInput}\n`);
     serialInputRef.current?.focus();

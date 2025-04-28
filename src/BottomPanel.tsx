@@ -38,7 +38,7 @@ const BottomPanel = () => {
     keyboardConfig: KeyboardShortcuts.HOME_ROW,
   });
 
-  const onSquidboxButtonPress = (index) => {
+  const onSquidboxButtonPress = (index: number) => {
     const notes = buttonMappings[index];
     setConfig((prevConfig) => ({
       ...prevConfig,
@@ -55,14 +55,17 @@ const BottomPanel = () => {
 
   useEffect(() => {
     if (!audioContext) {
-      // webkitAudioContext fallback needed to support Safari
       const AudioContextClass =
+        // @ts-expect-error webkitAudioContext fallback needed to support Safari
         window.AudioContext || window.webkitAudioContext;
+      // @ts-expect-error AudioContextClass is not defined
       setAudioContext(new AudioContextClass());
     }
 
     return () => {
+      // @ts-expect-error audioContext is not defined
       if (audioContext && audioContext.state !== "closed") {
+        // @ts-expect-error close method is not defined
         audioContext.close();
       }
     };
