@@ -4,13 +4,13 @@ import Daemon from "arduino-create-agent-js-client";
 import "react-piano/dist/styles.css";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
 import SquidboxButton from "./SquidboxButton";
 import SoundfontProvider from "./SoundfontProvider";
 import { DimensionsProvider, useDimensions } from "./DimensionsProvider";
 import PianoConfig from "./PianoConfig";
 import InstrumentListProvider from "./InstrumentListProvider";
 
-const shouldDebugAgent = false;
 const chromeExtensionID = "hfejhkbipnickajaidoppbadcomekkde";
 const isChromeOs = () => window.navigator.userAgent.indexOf(" CrOS ") !== -1;
 const soundfontHostname = "https://d1pzp51pvbm36p.cloudfront.net";
@@ -46,6 +46,7 @@ const BottomPanel = () => {
   const [serialInput, setSerialInput] = useState("");
   const [waitingForResponse, setWaitingForResponse] = useState(false);
   const [supportedBoards, setSupportedBoards] = useState([]);
+  const [shouldShowAgentDebug, setShouldShowAgentDebug] = useState(false);
   const [error, setError] = useState("");
 
   const serialTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -207,7 +208,7 @@ const BottomPanel = () => {
     <div className="m-4 grid grid-cols-3 grid-rows-[auto_1fr] gap-8">
       {/* Row 1, Column 1: Connect UI */}
       <div className="flex flex-col items-center text-center gap-4">
-        {shouldDebugAgent && (
+        {shouldShowAgentDebug && (
           <div>
             <p>
               Agent status:{" "}
@@ -289,7 +290,7 @@ const BottomPanel = () => {
           </div>
         )}
 
-        {shouldDebugAgent && (
+        {shouldShowAgentDebug && (
           <div>
             <h2>Serial Monitor</h2>
             <form onSubmit={handleSend}>
@@ -312,11 +313,19 @@ const BottomPanel = () => {
           </div>
         )}
 
-        {error ? (
-          <p className="mt-4 text-red-500">Error: {error}</p>
-        ) : (
-          <p className="mt-4 text-green-500">No errors</p>
-        )}
+        <div className="flex gap-2 items-center">
+          <Toggle
+            aria-label="Toggle Agent Debug"
+            onClick={() => setShouldShowAgentDebug((prev) => !prev)}
+          >
+            {shouldShowAgentDebug ? "Hide Debug" : "Show Debug"}
+          </Toggle>
+          {error ? (
+            <p className="text-red-500">Error: {error}</p>
+          ) : (
+            <p className="text-green-500">No errors</p>
+          )}
+        </div>
       </div>
       {/* Row 1, Column 2: Squidbox Buttons */}
       <div className="flex flex-col items-center justify-center">
