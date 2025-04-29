@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Piano, MidiNumbers, KeyboardShortcuts } from "react-piano";
-import "./BottomPanel.css";
 import "react-piano/dist/styles.css";
 import SquidboxButton from "./SquidboxButton";
 import SoundfontProvider from "./SoundfontProvider";
@@ -76,13 +75,13 @@ const BottomPanel = () => {
   }
 
   return (
-    <div className="App-bottom-panel">
+    <div className="flex-1 flex flex-col items-center text-center gap-8">
       <div>
-        <button className="buttons">Connect Squidbox</button>
-        <button className="buttons">Add Voicing</button>
-        <button className="buttons">Select Mode</button>
+        <button>Connect Squidbox</button>
+        <button>Add Voicing</button>
+        <button>Select Mode</button>
       </div>
-      <div className="squidbox-buttons-container">
+      <div className="flex gap-2">
         {buttonMappings.map((_, index) => {
           return (
             <SquidboxButton
@@ -103,7 +102,7 @@ const BottomPanel = () => {
         audioContext={audioContext}
         hostname={soundfontHostname}
         render={({ isLoading, playNote, stopNote, stopAllNotes }) => (
-          <div className="piano">
+          <div className="flex flex-col items-center">
             <InstrumentListProvider
               hostname={soundfontHostname}
               render={(instrumentList) => (
@@ -122,7 +121,7 @@ const BottomPanel = () => {
               )}
             />
             <DimensionsProvider>
-              <div className="keyboard-container">
+              <div>
                 <ResponsivePiano
                   noteRange={config.noteRange}
                   activeNotes={config.activeNotes}

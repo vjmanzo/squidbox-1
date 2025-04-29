@@ -1,19 +1,16 @@
-import "./App.css";
-import AgentDemo from "./AgentDemo";
 import TopPanel from "./TopPanel";
 import BottomPanel from "./BottomPanel";
 
-const shouldShowAgentDemo = false;
-
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">Squidbox</header>
-      <main className="App-main">
+    <div className="h-screen flex flex-col">
+      <header className="bg-blue-200 text-center text-2xl border-b">
+        Squidbox
+      </header>
+      <main className="flex-1 flex flex-col">
         <TopPanel />
         <BottomPanel />
       </main>
-      {shouldShowAgentDemo && <AgentDemo />}
     </div>
   );
 }

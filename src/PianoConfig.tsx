@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { MidiNumbers } from "react-piano";
 
 const AutoblurSelect = ({ children, onChange, ...otherProps }) => {
@@ -84,11 +84,10 @@ const PianoConfig = ({
   const { noteRange, instrumentName } = config;
 
   return (
-    <div className="piano-config">
-      <div className="note-selection">
+    <div className="max-w-2xl flex flex-wrap">
+      <div className="flex-[1_1_30%] flex gap-2 items-center">
         <Label>First note</Label>
         <AutoblurSelect
-          className="note-dropdown"
           onChange={handleChangeFirstNote}
           value={noteRange.first}
         >
@@ -103,13 +102,9 @@ const PianoConfig = ({
           ))}
         </AutoblurSelect>
       </div>
-      <div className="note-selection">
+      <div className="flex-[1_1_30%] flex gap-2 items-center">
         <Label>Last note</Label>
-        <AutoblurSelect
-          className="form-control"
-          onChange={handleChangeLastNote}
-          value={noteRange.last}
-        >
+        <AutoblurSelect onChange={handleChangeLastNote} value={noteRange.last}>
           {MidiNumbers.NATURAL_MIDI_NUMBERS.map((midiNumber) => (
             <option
               value={midiNumber}
@@ -121,7 +116,7 @@ const PianoConfig = ({
           ))}
         </AutoblurSelect>
       </div>
-      <div className="instrument-selection">
+      <div className="flex-[1_1_30%] flex gap-2 items-center">
         <Label>Instrument</Label>
         <AutoblurSelect
           className="instrument-dropdown"
@@ -135,7 +130,7 @@ const PianoConfig = ({
           ))}
         </AutoblurSelect>
       </div>
-      <div className="keyboard-shortcut-info">
+      <div className="my-2 flex-[1_1_100%] text-center">
         <small className="shortcut-text">
           Use <strong>left arrow</strong> and <strong>right arrow</strong> to
           move the keyboard shortcuts around.

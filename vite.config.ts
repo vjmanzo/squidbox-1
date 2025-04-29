@@ -11,4 +11,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Adjust Vites dev server to work with Arduino Cloud Agent
+  // https://vitejs.dev/config/server-options.html
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
 });
