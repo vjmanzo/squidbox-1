@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import TopPanel from "./TopPanel";
 import BottomPanel from "./BottomPanel";
 
@@ -10,6 +11,7 @@ function App() {
       <main className="flex-1 flex flex-col">
         <TopPanel />
         <BottomPanel />
+        <Toaster />
       </main>
     </div>
   );

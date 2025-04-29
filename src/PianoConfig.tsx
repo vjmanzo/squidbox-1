@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { MidiNumbers } from "react-piano";
+import { Button } from "@/components/ui/button";
 
 const AutoblurSelect = ({ children, onChange, ...otherProps }) => {
   const selectRef = useRef();
@@ -84,8 +85,9 @@ const PianoConfig = ({
   const { noteRange, instrumentName } = config;
 
   return (
-    <div className="max-w-2xl flex flex-wrap">
-      <div className="flex-[1_1_30%] flex gap-2 items-center">
+    <div className="max-w-2xl flex gap-4 flex-wrap">
+      <Button>Select Mode</Button>
+      <div className="flex gap-2 items-center">
         <Label>First note</Label>
         <AutoblurSelect
           onChange={handleChangeFirstNote}
@@ -102,7 +104,7 @@ const PianoConfig = ({
           ))}
         </AutoblurSelect>
       </div>
-      <div className="flex-[1_1_30%] flex gap-2 items-center">
+      <div className="flex gap-2 items-center">
         <Label>Last note</Label>
         <AutoblurSelect onChange={handleChangeLastNote} value={noteRange.last}>
           {MidiNumbers.NATURAL_MIDI_NUMBERS.map((midiNumber) => (
@@ -116,7 +118,7 @@ const PianoConfig = ({
           ))}
         </AutoblurSelect>
       </div>
-      <div className="flex-[1_1_30%] flex gap-2 items-center">
+      <div className="flex gap-2 items-center">
         <Label>Instrument</Label>
         <AutoblurSelect
           className="instrument-dropdown"
