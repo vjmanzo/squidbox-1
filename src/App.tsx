@@ -65,7 +65,11 @@ function App() {
           onAddPreset={handleAddPreset}
           onDeletePreset={handleDeletePreset}
         />
-        <BottomPanel buttonMappings={presets[activePresetIndex].notes} />
+        <BottomPanel
+          presets={presets}
+          setPresets={setPresets}
+          activePresetIndex={activePresetIndex}
+        />
         <Toaster />
       </main>
     </div>

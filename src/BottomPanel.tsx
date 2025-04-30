@@ -10,6 +10,7 @@ import SoundfontProvider from "./SoundfontProvider";
 import { DimensionsProvider, useDimensions } from "./DimensionsProvider";
 import PianoConfig from "./PianoConfig";
 import InstrumentListProvider from "./InstrumentListProvider";
+import { Preset } from "./Preset";
 
 const chromeExtensionID = "hfejhkbipnickajaidoppbadcomekkde";
 const isChromeOs = () => window.navigator.userAgent.indexOf(" CrOS ") !== -1;
@@ -24,7 +25,16 @@ const scrollToBottom = (target: HTMLElement | null) => {
   if (target) target.scrollTop = target.scrollHeight;
 };
 
-const BottomPanel = ({ buttonMappings }: { buttonMappings: number[][] }) => {
+const BottomPanel = ({
+  presets,
+  setPresets,
+  activePresetIndex,
+}: {
+  presets: Preset[];
+  setPresets: (presets: Preset[]) => void;
+  activePresetIndex: number;
+}) => {
+  const buttonMappings = presets[activePresetIndex].notes;
   /* Agent states */
   const [agentStatus, setAgentStatus] = useState(false);
   const [channelStatus, setChannelStatus] = useState(false);
@@ -114,7 +124,21 @@ const BottomPanel = ({ buttonMappings }: { buttonMappings: number[][] }) => {
           );
 
           if (waitingForResponse) {
-            if (message.includes("OK")) {
+            if (message.includes("OK {")) {
+              const jsonString = message.split("OK ")[1];
+              const json = JSON.parse(jsonString);
+              const newPresets = json.presets.map((preset: any) => ({
+                name: preset.name,
+                description: preset.description,
+                notes: preset.notes,
+              }));
+              setPresets(newPresets);
+              setConfig((prevConfig) => ({
+                ...prevConfig,
+                activeNotes: [],
+              }));
+              toast.success("Config downloaded.");
+            } else if (message.includes("OK")) {
               toast.success("Command succeeded.");
             } else if (message.includes("ERR")) {
               toast.error("Command failed.");
@@ -182,9 +206,16 @@ const BottomPanel = ({ buttonMappings }: { buttonMappings: number[][] }) => {
   };
 
   const handleUploadConfig = () => {
-    const command = "SETCONF {}";
-    setSerialInput(command);
-    daemon.writeSerial(serialPortOpen, `${command}\n`);
+    const command = "SETCONF ";
+    const configString = JSON.stringify(presets)
+      .replace(/:/g, "=")
+      .replace(/,/g, " ")
+      .replace(/"/g, "")
+      .replace(/}/g, "")
+      .replace(/{/g, "");
+    const commandWithConfig = `${command} ${configString}`;
+    setSerialInput(commandWithConfig);
+    daemon.writeSerial(serialPortOpen, `${commandWithConfig}\n`);
     serialInputRef.current?.focus();
     setSerialInput("");
     setWaitingForResponse(true);
