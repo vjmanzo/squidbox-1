@@ -159,7 +159,7 @@ const BottomPanel = ({
     return () => {
       subs.forEach((sub) => sub.unsubscribe?.());
     };
-  }, [waitingForResponse]);
+  }, [waitingForResponse, setPresets]);
 
   const requestDevicePermission = async () => {
     if ("serial" in navigator) {
@@ -178,7 +178,7 @@ const BottomPanel = ({
   const handleOpen = (e: React.MouseEvent, port: string) => {
     e.preventDefault();
     setSerialMonitorContent("");
-    daemon.openSerialMonitor(port, 9600);
+    daemon.openSerialMonitor(port, 115200);
     setSerialPortOpen(port);
   };
 
@@ -197,6 +197,13 @@ const BottomPanel = ({
   };
 
   const handleDownloadConfig = () => {
+    if (
+      !confirm(
+        "This will replace the current config in the browser. Do you want to continue?",
+      )
+    ) {
+      return;
+    }
     const command = "GETCONF";
     setSerialInput(command);
     daemon.writeSerial(serialPortOpen, `${command}\n`);
@@ -206,13 +213,21 @@ const BottomPanel = ({
   };
 
   const handleUploadConfig = () => {
-    const command = "SETCONF ";
-    const configString = JSON.stringify(presets)
-      .replace(/:/g, "=")
-      .replace(/,/g, " ")
-      .replace(/"/g, "")
-      .replace(/}/g, "")
-      .replace(/{/g, "");
+    if (
+      !confirm(
+        "This will replace the current config on the Squidbox. Do you want to continue?",
+      )
+    ) {
+      return;
+    }
+    const command = "SETCONF";
+    const configString = JSON.stringify({
+      presets: presets.map((preset) => ({
+        name: preset.name,
+        description: preset.description,
+        notes: preset.notes,
+      })),
+    });
     const commandWithConfig = `${command} ${configString}`;
     setSerialInput(commandWithConfig);
     daemon.writeSerial(serialPortOpen, `${commandWithConfig}\n`);
@@ -306,7 +321,7 @@ const BottomPanel = ({
         {/* only show when serial port is open */}
         {serialPortOpen && (
           <div className="flex gap-2 items-center">
-            <Button onClick={handleDownloadConfig}>Donwload Config</Button>
+            <Button onClick={handleDownloadConfig}>Download Config</Button>
             <Button onClick={handleUploadConfig}>Upload Config</Button>
           </div>
         )}
