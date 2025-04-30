@@ -8,7 +8,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./components/ui/dropdown-menu"
+} from "./components/ui/dropdown-menu";
 
 const AutoblurSelect = ({ children, onChange, ...otherProps }) => {
   const selectRef = useRef();
@@ -33,6 +33,10 @@ const PianoConfig = ({
   instrumentList,
   keyboardShortcuts,
 }) => {
+  const [mode, setMode] = useState<"Edit Mode" | "Preview Mode">(
+    "Preview Mode",
+  );
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       const numNotes = config.noteRange.last - config.noteRange.first + 1;
@@ -57,8 +61,6 @@ const PianoConfig = ({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [config, setConfig, keyboardShortcuts]);
-
-  const [mode, setMode] = useState<"Edit Mode" | "Preview Mode">("Preview Mode");
 
   const midiNumbersToNotes = MidiNumbers.NATURAL_MIDI_NUMBERS.reduce(
     (obj, midiNumber) => {
@@ -97,13 +99,18 @@ const PianoConfig = ({
   return (
     <div className="max-w-2xl flex gap-4 flex-wrap">
       <DropdownMenu>
-          <DropdownMenuTrigger> <Button variant="default">{mode}</Button> </DropdownMenuTrigger>
-
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={ ()=> setMode("Preview Mode")}>Preview Mode</DropdownMenuItem>
-            <DropdownMenuItem onClick={ ()=> setMode("Edit Mode")}>Edit Mode</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <DropdownMenuTrigger>
+          <Button variant="default">{mode}</Button>{" "}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem onClick={() => setMode("Preview Mode")}>
+            Preview Mode
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setMode("Edit Mode")}>
+            Edit Mode
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <div className="flex gap-2 items-center">
         <Label>First note</Label>
         <AutoblurSelect

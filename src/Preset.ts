@@ -4,6 +4,37 @@ export type Preset = {
   notes: number[][];
 };
 
+export const DEFAULT_PRESETS: Preset[] = [
+  {
+    name: "Major Triads",
+    description: "Standard major triads",
+    notes: [
+      [60, 64, 67], // C4, E4, G4
+      [62, 65, 69], // D4, F4, A4
+      [64, 67, 71], // E4, G4, B4
+      [65, 69, 72], // F4, A4, C5
+      [67, 71, 74], // G4, B4, D5
+      [69, 72, 76], // A4, C5, E5
+      [71, 74, 77], // B4, D5, F5
+      [72, 76, 79], // C5, E5, G5
+    ],
+  },
+  {
+    name: "Minor Triads",
+    description: "Standard minor triads",
+    notes: [
+      [60, 63, 67], // C4, D#4, G4
+      [62, 65, 68], // D4, F4, G#4
+      [64, 67, 70], // E4, G4, A#4
+      [65, 68, 72], // F4, G#4, C5
+      [67, 70, 74], // G4, A#4, D5
+      [69, 72, 75], // A4, C5, D#5
+      [71, 74, 77], // B4, D5, F5
+      [72, 75, 79], // C5, D#5, G5
+    ],
+  },
+];
+
 export const TEMPLATE_PRESETS: Preset[] = [
   {
     name: "Major Triads",

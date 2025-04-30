@@ -11,6 +11,12 @@ import { DimensionsProvider, useDimensions } from "./DimensionsProvider";
 import PianoConfig from "./PianoConfig";
 import InstrumentListProvider from "./InstrumentListProvider";
 import { Preset } from "./Preset";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./components/ui/dropdown-menu";
 
 const chromeExtensionID = "hfejhkbipnickajaidoppbadcomekkde";
 const isChromeOs = () => window.navigator.userAgent.indexOf(" CrOS ") !== -1;
@@ -35,6 +41,9 @@ const BottomPanel = ({
   activePresetIndex: number;
 }) => {
   const buttonMappings = presets[activePresetIndex].notes;
+  const responseBufferRef = useRef("");
+  const responseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   /* Agent states */
   const [agentStatus, setAgentStatus] = useState(false);
   const [channelStatus, setChannelStatus] = useState(false);
@@ -122,37 +131,60 @@ const BottomPanel = ({
           requestAnimationFrame(() =>
             scrollToBottom(serialTextareaRef.current),
           );
-
-          if (waitingForResponse) {
-            if (message.includes("OK {")) {
-              const jsonString = message.split("OK ")[1];
-              const json = JSON.parse(jsonString);
-              const newPresets = json.presets.map((preset: any) => ({
-                name: preset.name,
-                description: preset.description,
-                notes: preset.notes,
-              }));
-              setPresets(newPresets);
-              setConfig((prevConfig) => ({
-                ...prevConfig,
-                activeNotes: [],
-              }));
-              toast.success("Config downloaded.");
-            } else if (message.includes("OK")) {
-              toast.success("Command succeeded.");
-            } else if (message.includes("ERR")) {
-              toast.error("Command failed.");
-            } else if (message.includes("Unrecognized command")) {
-              toast.error("Unrecognized command.");
-            } else {
-              // Optional: default case
-              toast("Received response.");
-            }
-            setWaitingForResponse(false);
-          }
-
           return updated;
         });
+
+        if (!waitingForResponse) return;
+
+        // Accumulate response
+        responseBufferRef.current += message;
+        const full = responseBufferRef.current.trim();
+
+        if (full.startsWith("OK {")) {
+          try {
+            const jsonString = full.slice(3).trim();
+            const json = JSON.parse(jsonString);
+            const newPresets = json.presets.map((preset: any) => ({
+              name: preset.name,
+              description: preset.description,
+              notes: preset.notes,
+            }));
+            setPresets(newPresets);
+            setConfig((prevConfig) => ({
+              ...prevConfig,
+              activeNotes: [],
+            }));
+            toast.success("Config downloaded.");
+          } catch {
+            // Still incomplete, wait
+            return;
+          }
+          // Cleanup on success
+          responseBufferRef.current = "";
+          if (responseTimeoutRef.current) {
+            clearTimeout(responseTimeoutRef.current);
+            responseTimeoutRef.current = null;
+          }
+          setWaitingForResponse(false);
+        } else if (
+          full.includes("OK") ||
+          full.includes("ERR") ||
+          full.includes("Unrecognized command")
+        ) {
+          toast(
+            full.includes("ERR")
+              ? "Command failed: " + full.slice(3).trim()
+              : full.includes("Unrecognized")
+                ? "Unrecognized command."
+                : "Command succeeded.",
+          );
+          responseBufferRef.current = "";
+          if (responseTimeoutRef.current) {
+            clearTimeout(responseTimeoutRef.current);
+            responseTimeoutRef.current = null;
+          }
+          setWaitingForResponse(false);
+        }
       }),
     ];
 
@@ -205,11 +237,18 @@ const BottomPanel = ({
       return;
     }
     const command = "GETCONF";
-    setSerialInput(command);
     daemon.writeSerial(serialPortOpen, `${command}\n`);
-    serialInputRef.current?.focus();
-    setSerialInput("");
     setWaitingForResponse(true);
+    responseBufferRef.current = "";
+    if (responseTimeoutRef.current) {
+      clearTimeout(responseTimeoutRef.current);
+    }
+    // Start timeout
+    responseTimeoutRef.current = setTimeout(() => {
+      toast.error("Timed out downloading config.");
+      responseBufferRef.current = "";
+      setWaitingForResponse(false);
+    }, 1000);
   };
 
   const handleUploadConfig = () => {
@@ -220,19 +259,11 @@ const BottomPanel = ({
     ) {
       return;
     }
-    const command = "SETCONF";
     const configString = JSON.stringify({
-      presets: presets.map((preset) => ({
-        name: preset.name,
-        description: preset.description,
-        notes: preset.notes,
-      })),
+      presets: presets,
     });
-    const commandWithConfig = `${command} ${configString}`;
-    setSerialInput(commandWithConfig);
+    const commandWithConfig = `SETCONF|${configString}`;
     daemon.writeSerial(serialPortOpen, `${commandWithConfig}\n`);
-    serialInputRef.current?.focus();
-    setSerialInput("");
     setWaitingForResponse(true);
   };
 
