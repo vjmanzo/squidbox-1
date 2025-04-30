@@ -56,13 +56,15 @@ const TopPanel = ({
                 ))}
               </ul>
             </div>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => onDeletePreset(index)}
-            >
-              Delete
-            </Button>
+            {presets.length > 1 && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => onDeletePreset(index)}
+              >
+                Delete
+              </Button>
+            )}
             <Button
               size="sm"
               onClick={() => onSelectPreset(index)}
