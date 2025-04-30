@@ -14,16 +14,6 @@ import InstrumentListProvider from "./InstrumentListProvider";
 const chromeExtensionID = "hfejhkbipnickajaidoppbadcomekkde";
 const isChromeOs = () => window.navigator.userAgent.indexOf(" CrOS ") !== -1;
 const soundfontHostname = "https://d1pzp51pvbm36p.cloudfront.net";
-const buttonMappings = [
-  ["c4", "e4", "g4"].map(MidiNumbers.fromNote),
-  ["d4", "f4", "a4"].map(MidiNumbers.fromNote),
-  ["e4", "g4", "b4"].map(MidiNumbers.fromNote),
-  ["f4", "a4", "c5"].map(MidiNumbers.fromNote),
-  ["g4", "b4", "d5"].map(MidiNumbers.fromNote),
-  ["a4", "c5", "e5"].map(MidiNumbers.fromNote),
-  ["b4", "d5", "f5"].map(MidiNumbers.fromNote),
-  ["c5", "e5", "g5"].map(MidiNumbers.fromNote),
-];
 
 const daemon = new Daemon(
   "https://builder.arduino.cc/v3/boards",
@@ -34,7 +24,7 @@ const scrollToBottom = (target: HTMLElement | null) => {
   if (target) target.scrollTop = target.scrollHeight;
 };
 
-const BottomPanel = () => {
+const BottomPanel = ({ buttonMappings }: { buttonMappings: number[][] }) => {
   /* Agent states */
   const [agentStatus, setAgentStatus] = useState(false);
   const [channelStatus, setChannelStatus] = useState(false);
