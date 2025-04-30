@@ -1,6 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MidiNumbers } from "react-piano";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./components/ui/dropdown-menu"
 
 const AutoblurSelect = ({ children, onChange, ...otherProps }) => {
   const selectRef = useRef();
@@ -50,6 +58,8 @@ const PianoConfig = ({
     };
   }, [config, setConfig, keyboardShortcuts]);
 
+  const [mode, setMode] = useState<"Edit Mode" | "Preview Mode">("Preview Mode");
+
   const midiNumbersToNotes = MidiNumbers.NATURAL_MIDI_NUMBERS.reduce(
     (obj, midiNumber) => {
       obj[midiNumber] = MidiNumbers.getAttributes(midiNumber).note;
@@ -86,7 +96,14 @@ const PianoConfig = ({
 
   return (
     <div className="max-w-2xl flex gap-4 flex-wrap">
-      <Button>Select Mode</Button>
+      <DropdownMenu>
+          <DropdownMenuTrigger> <Button variant="default">{mode}</Button> </DropdownMenuTrigger>
+
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={ ()=> setMode("Preview Mode")}>Preview Mode</DropdownMenuItem>
+            <DropdownMenuItem onClick={ ()=> setMode("Edit Mode")}>Edit Mode</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       <div className="flex gap-2 items-center">
         <Label>First note</Label>
         <AutoblurSelect
