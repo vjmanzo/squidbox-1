@@ -1,27 +1,39 @@
 import { useState, useEffect, useRef } from "react";
-import { Piano, MidiNumbers, KeyboardShortcuts } from "react-piano";
-import Daemon from "arduino-create-agent-js-client";
+import { Piano, KeyboardShortcuts } from "react-piano";
 import "react-piano/dist/styles.css";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import SquidboxButton from "./SquidboxButton";
 import SoundfontProvider from "./SoundfontProvider";
-import { DimensionsProvider, useDimensions } from "./DimensionsProvider";
-import PianoConfig from "./PianoConfig";
+import DimensionsProvider from "./DimensionsProvider";
+import { useDimensions } from "./useDimensions";
+import PianoConfig, {
+  type PianoConfig as PianoConfigType,
+} from "./PianoConfig";
 import InstrumentListProvider from "./InstrumentListProvider";
-import { Preset } from "./Preset";
+import {
+  getButtonColorFromIndex,
+  Preset,
+  SquidboxConfig,
+} from "./squidboxConfig";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu";
+import { InstrumentName } from "soundfont-player";
+import Daemon, {
+  NetworkDevice,
+  SerialDevice,
+} from "arduino-create-agent-js-client";
 
 const chromeExtensionID = "hfejhkbipnickajaidoppbadcomekkde";
 const isChromeOs = () => window.navigator.userAgent.indexOf(" CrOS ") !== -1;
 const soundfontHostname = "https://d1pzp51pvbm36p.cloudfront.net";
 
+// @ts-expect-error arudino-create-agent-js-client does not have types
 const daemon = new Daemon(
   "https://builder.arduino.cc/v3/boards",
   chromeExtensionID,
@@ -32,62 +44,68 @@ const scrollToBottom = (target: HTMLElement | null) => {
 };
 
 const BottomPanel = ({
-  presets,
+  squidboxConfig,
   setPresets,
   activePresetIndex,
 }: {
-  presets: Preset[];
+  squidboxConfig: SquidboxConfig;
   setPresets: (presets: Preset[]) => void;
   activePresetIndex: number;
 }) => {
+  const presets = squidboxConfig.presets;
   const buttonMappings = presets[activePresetIndex].notes;
+
   const responseBufferRef = useRef("");
   const responseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /* Agent states */
   const [agentStatus, setAgentStatus] = useState(false);
   const [channelStatus, setChannelStatus] = useState(false);
-  const [serialDevices, setSerialDevices] = useState([]);
-  const [networkDevices, setNetworkDevices] = useState([]);
+  const [serialDevices, setSerialDevices] = useState<SerialDevice[]>([]);
+  const [networkDevices, setNetworkDevices] = useState<NetworkDevice[]>([]);
   const [agentInfo, setAgentInfo] = useState("");
   const [serialMonitorContent, setSerialMonitorContent] = useState("");
-  const [serialPortOpen, setSerialPortOpen] = useState("");
+  const [serialPortOpen, setSerialPortOpen] = useState<string | null>("");
   const [serialInput, setSerialInput] = useState("");
   const [waitingForResponse, setWaitingForResponse] = useState(false);
-  const [supportedBoards, setSupportedBoards] = useState([]);
+  // const [supportedBoards, setSupportedBoards] = useState([]);
   const [shouldShowAgentDebug, setShouldShowAgentDebug] = useState(false);
   const [error, setError] = useState("");
 
   const serialTextareaRef = useRef<HTMLTextAreaElement>(null);
   const serialInputRef = useRef<HTMLInputElement>(null);
   /* Piano states */
-  const [audioContext, setAudioContext] = useState(null);
-  const [config, setConfig] = useState({
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+  const [pianoConfig, setPianoConfig] = useState<
+    PianoConfigType & {
+      activeNotes: number[];
+    }
+  >({
     instrumentName: "acoustic_grand_piano",
     noteRange: {
-      first: MidiNumbers.fromNote("c4"),
-      last: MidiNumbers.fromNote("f6"),
+      first: 60, // c4
+      last: 89, // f6
     },
     keyboardShortcutOffset: 0,
     activeNotes: [],
   });
 
   const keyboardShortcuts = KeyboardShortcuts.create({
-    firstNote: config.noteRange.first + config.keyboardShortcutOffset,
-    lastNote: config.noteRange.last + config.keyboardShortcutOffset,
+    firstNote: pianoConfig.noteRange.first + pianoConfig.keyboardShortcutOffset,
+    lastNote: pianoConfig.noteRange.last + pianoConfig.keyboardShortcutOffset,
     keyboardConfig: KeyboardShortcuts.HOME_ROW,
   });
 
   const onSquidboxButtonPress = (index: number) => {
     const notes = buttonMappings[index];
-    setConfig((prevConfig) => ({
+    setPianoConfig((prevConfig) => ({
       ...prevConfig,
       activeNotes: notes,
     }));
   };
 
   const onSquidboxButtonRelease = () => {
-    setConfig((prevConfig) => ({
+    setPianoConfig((prevConfig) => ({
       ...prevConfig,
       activeNotes: [],
     }));
@@ -98,14 +116,11 @@ const BottomPanel = ({
       const AudioContextClass =
         // @ts-expect-error webkitAudioContext fallback needed to support Safari
         window.AudioContext || window.webkitAudioContext;
-      // @ts-expect-error AudioContextClass is not defined
       setAudioContext(new AudioContextClass());
     }
 
     return () => {
-      // @ts-expect-error audioContext is not defined
       if (audioContext && audioContext.state !== "closed") {
-        // @ts-expect-error close method is not defined
         audioContext.close();
       }
     };
@@ -120,11 +135,19 @@ const BottomPanel = ({
       daemon.channelOpen.subscribe(setChannelStatus),
       daemon.error.subscribe(showError),
       daemon.serialMonitorError.subscribe(showError),
-      daemon.devicesList.subscribe(({ serial, network }) => {
-        setSerialDevices(serial);
-        setNetworkDevices(network);
-      }),
-      daemon.supportedBoards.subscribe(setSupportedBoards),
+      daemon.devicesList.subscribe(
+        ({
+          serial,
+          network,
+        }: {
+          serial: SerialDevice[];
+          network: NetworkDevice[];
+        }) => {
+          setSerialDevices(serial);
+          setNetworkDevices(network);
+        },
+      ),
+      // daemon.supportedBoards.subscribe(setSupportedBoards),
       daemon.serialMonitorMessages.subscribe((message: string) => {
         setSerialMonitorContent((prev) => {
           const updated = prev + message;
@@ -144,13 +167,13 @@ const BottomPanel = ({
           try {
             const jsonString = full.slice(3).trim();
             const json = JSON.parse(jsonString);
-            const newPresets = json.presets.map((preset: any) => ({
+            const newPresets = json.presets.map((preset: Preset) => ({
               name: preset.name,
               description: preset.description,
               notes: preset.notes,
             }));
             setPresets(newPresets);
-            setConfig((prevConfig) => ({
+            setPianoConfig((prevConfig) => ({
               ...prevConfig,
               activeNotes: [],
             }));
@@ -195,6 +218,7 @@ const BottomPanel = ({
 
   const requestDevicePermission = async () => {
     if ("serial" in navigator) {
+      // @ts-expect-error serial is not defined
       const port = await navigator.serial.requestPort([
         { usbVendorId: 0x2341 },
       ]);
@@ -401,7 +425,7 @@ const BottomPanel = ({
             return (
               <SquidboxButton
                 key={index}
-                color={["red", "green", "purple", "yellow"][index % 4]}
+                color={getButtonColorFromIndex(index)}
                 alt={`Button ${index + 1}`}
                 onMouseDown={() => onSquidboxButtonPress(index)}
                 onMouseUp={onSquidboxButtonRelease}
@@ -413,29 +437,135 @@ const BottomPanel = ({
           })}
         </div>
       </div>
-      {/* Row 1, Column 3: Empty */}
-      <div />
+      {/* Row 1, Column 3: Config Actions */}
+      <div className="flex flex-col items-center justify-center gap-4">
+        <h3 className="text-md font-medium">Config Tools</h3>
+        <div className="flex gap-4">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const blob = new Blob(
+                [
+                  JSON.stringify(
+                    {
+                      presets: presets,
+                    },
+                    null,
+                    2,
+                  ),
+                ],
+                { type: "application/json" },
+              );
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = "squidbox-config.json";
+              link.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            Export Config
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Button variant="outline">Share Config</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem
+                onClick={async () => {
+                  try {
+                    const shareData = {
+                      title: "Squidbox Config",
+                      text: "Here's a config for Squidbox!",
+                      files: [
+                        new File(
+                          [
+                            JSON.stringify(
+                              {
+                                presets: presets,
+                              },
+                              null,
+                              2,
+                            ),
+                          ],
+                          "squidbox-config.json",
+                          { type: "application/json" },
+                        ),
+                      ],
+                    };
+
+                    if (navigator.canShare && navigator.canShare(shareData)) {
+                      await navigator.share(shareData);
+                    } else {
+                      toast.error("Sharing not supported on this device.");
+                    }
+                  } catch (e) {
+                    toast.error("Failed to share config: " + e);
+                  }
+                }}
+              >
+                JSON
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={async () => {
+                  try {
+                    const shareData = {
+                      title: "Squidbox Config",
+                      text: "Here's a config for Squidbox!",
+                      url: window.location.href,
+                    };
+                    if (navigator.canShare && navigator.canShare(shareData)) {
+                      await navigator.share(shareData);
+                    } else {
+                      toast.error("Sharing not supported on this device.");
+                    }
+                  } catch (e) {
+                    toast.error("Failed to share config: " + e);
+                  }
+                }}
+              >
+                URL
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
       {/* Row 2, Columns 1-3 merged: Piano and Config */}
       <div className="col-span-3">
         <SoundfontProvider
-          instrumentName={config.instrumentName}
-          audioContext={audioContext}
+          instrumentName={pianoConfig.instrumentName}
           hostname={soundfontHostname}
-          render={({ isLoading, playNote, stopNote, stopAllNotes }) => (
+          format="mp3"
+          soundfont="MusyngKite"
+          audioContext={audioContext}
+          render={({
+            isLoading,
+            playNote,
+            stopNote,
+            stopAllNotes,
+          }: {
+            isLoading: boolean;
+            playNote: (midiNumber: number) => void;
+            stopNote: (midiNumber: number) => void;
+            stopAllNotes: () => void;
+          }) => (
             <div className="flex flex-col items-center">
               <InstrumentListProvider
                 hostname={soundfontHostname}
-                render={(instrumentList) => (
+                soundfont="MusyngKite"
+                render={(instrumentList: InstrumentName[] | null) => (
                   <PianoConfig
-                    config={config}
-                    setConfig={(config) => {
-                      setConfig((prevConfig) => ({
+                    config={pianoConfig}
+                    setPianoConfig={(config) => {
+                      setPianoConfig((prevConfig) => ({
                         ...prevConfig,
                         ...config,
                       }));
                       stopAllNotes();
                     }}
-                    instrumentList={instrumentList || [config.instrumentName]}
+                    instrumentList={
+                      instrumentList || [pianoConfig.instrumentName]
+                    }
                     keyboardShortcuts={keyboardShortcuts}
                   />
                 )}
@@ -443,13 +573,12 @@ const BottomPanel = ({
               <DimensionsProvider>
                 <div>
                   <ResponsivePiano
-                    noteRange={config.noteRange}
-                    activeNotes={config.activeNotes}
+                    noteRange={pianoConfig.noteRange}
+                    activeNotes={pianoConfig.activeNotes}
                     playNote={playNote}
                     stopNote={stopNote}
                     isLoading={isLoading}
                     keyboardShortcuts={keyboardShortcuts}
-                    className="keyboard"
                   />
                 </div>
               </DimensionsProvider>
@@ -461,7 +590,15 @@ const BottomPanel = ({
   );
 };
 
-const ResponsivePiano = (props) => {
+const ResponsivePiano = (props: {
+  noteRange: { first: number; last: number };
+  activeNotes: number[];
+  playNote: (midiNumber: number) => void;
+  stopNote: (midiNumber: number) => void;
+  isLoading: boolean;
+  // @ts-expect-error react-piano does not have types for this
+  keyboardShortcuts: KeyboardShortcuts;
+}) => {
   const { width } = useDimensions();
 
   return <Piano width={width} {...props} />;

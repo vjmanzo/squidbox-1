@@ -1,8 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { DimensionsContext } from "./useDimensions";
 
-const DimensionsContext = createContext();
-
-export const DimensionsProvider = ({ children }) => {
+const DimensionsProvider = ({ children }: { children: React.ReactNode }) => {
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -27,10 +26,4 @@ export const DimensionsProvider = ({ children }) => {
   );
 };
 
-export const useDimensions = () => {
-  const context = useContext(DimensionsContext);
-  if (!context) {
-    throw new Error("useDimensions must be used within a DimensionsProvider");
-  }
-  return context;
-};
+export default DimensionsProvider;

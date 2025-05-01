@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { type Preset, TEMPLATE_PRESETS } from "./Preset";
+import { type Preset, TEMPLATE_PRESETS } from "./squidboxConfig";
 import { Button } from "@/components/ui/button";
 
 const getNoteName = (noteNumber: number): string => {

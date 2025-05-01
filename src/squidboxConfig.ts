@@ -1,8 +1,26 @@
+import { z } from "zod";
+
+export type SquidboxConfig = {
+  presets: Preset[];
+};
+
 export type Preset = {
   name: string;
   description: string;
   notes: number[][];
 };
+
+export const NUM_SQUIDBOX_BUTTONS = 8;
+
+export const SquidboxConfigSchema = z.object({
+  presets: z.array(
+    z.object({
+      name: z.string(),
+      description: z.string(),
+      notes: z.array(z.array(z.number())).length(NUM_SQUIDBOX_BUTTONS),
+    }),
+  ),
+});
 
 export const DEFAULT_PRESETS: Preset[] = [
   {
@@ -154,3 +172,29 @@ export const TEMPLATE_PRESETS: Preset[] = [
     notes: [[], [], [], [], [], [], [], []],
   },
 ];
+
+export const DEFAULT_CONFIG: SquidboxConfig = {
+  presets: DEFAULT_PRESETS,
+};
+
+export enum ButtonColor {
+  RED = "red",
+  GREEN = "green",
+  PURPLE = "purple",
+  YELLOW = "yellow",
+}
+
+export const getButtonColorFromIndex = (index: number): ButtonColor => {
+  switch (index % 4) {
+    case 0:
+      return ButtonColor.RED;
+    case 1:
+      return ButtonColor.GREEN;
+    case 2:
+      return ButtonColor.PURPLE;
+    case 3:
+      return ButtonColor.YELLOW;
+    default:
+      throw new Error("Invalid button index");
+  }
+};

@@ -5,40 +5,63 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu";
+import { InstrumentName } from "soundfont-player";
 
-const AutoblurSelect = ({ children, onChange, ...otherProps }) => {
-  const selectRef = useRef();
+const AutoblurSelect = ({
+  value,
+  children,
+  onChange,
+}: {
+  value: string | number;
+  children: React.ReactNode;
+  onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+}) => {
+  const selectRef = useRef<HTMLSelectElement>(null);
 
-  const handleChange = (event) => {
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     onChange(event);
-    selectRef.current.blur();
+    selectRef.current?.blur();
   };
 
   return (
-    <select {...otherProps} onChange={handleChange} ref={selectRef}>
+    <select value={value} onChange={handleChange} ref={selectRef}>
       {children}
     </select>
   );
 };
 
-const Label = ({ children }) => <small>{children}</small>;
+const Label = ({ children }: { children: React.ReactNode }) => (
+  <small>{children}</small>
+);
+
+export type PianoConfig = {
+  noteRange: {
+    first: number;
+    last: number;
+  };
+  instrumentName: InstrumentName;
+  keyboardShortcutOffset: number;
+};
 
 const PianoConfig = ({
   config,
-  setConfig,
+  setPianoConfig,
   instrumentList,
   keyboardShortcuts,
+}: {
+  config: PianoConfig;
+  setPianoConfig: (config: Partial<PianoConfig>) => void;
+  instrumentList: InstrumentName[];
+  keyboardShortcuts: string[];
 }) => {
   const [mode, setMode] = useState<"Edit Mode" | "Preview Mode">(
     "Preview Mode",
   );
 
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       const numNotes = config.noteRange.last - config.noteRange.first + 1;
       const minOffset = 0;
       const maxOffset = numNotes - keyboardShortcuts.length;
@@ -46,12 +69,12 @@ const PianoConfig = ({
       if (event.key === "ArrowLeft") {
         const reducedOffset = config.keyboardShortcutOffset - 1;
         if (reducedOffset >= minOffset) {
-          setConfig({ keyboardShortcutOffset: reducedOffset });
+          setPianoConfig({ keyboardShortcutOffset: reducedOffset });
         }
       } else if (event.key === "ArrowRight") {
         const increasedOffset = config.keyboardShortcutOffset + 1;
         if (increasedOffset <= maxOffset) {
-          setConfig({ keyboardShortcutOffset: increasedOffset });
+          setPianoConfig({ keyboardShortcutOffset: increasedOffset });
         }
       }
     };
@@ -60,18 +83,20 @@ const PianoConfig = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [config, setConfig, keyboardShortcuts]);
+  }, [config, setPianoConfig, keyboardShortcuts]);
 
   const midiNumbersToNotes = MidiNumbers.NATURAL_MIDI_NUMBERS.reduce(
-    (obj, midiNumber) => {
+    (obj: Record<number, string>, midiNumber: number) => {
       obj[midiNumber] = MidiNumbers.getAttributes(midiNumber).note;
       return obj;
     },
     {},
   );
 
-  const handleChangeFirstNote = (event) => {
-    setConfig({
+  const handleChangeFirstNote = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    setPianoConfig({
       noteRange: {
         first: parseInt(event.target.value, 10),
         last: config.noteRange.last,
@@ -79,8 +104,10 @@ const PianoConfig = ({
     });
   };
 
-  const handleChangeLastNote = (event) => {
-    setConfig({
+  const handleChangeLastNote = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    setPianoConfig({
       noteRange: {
         first: config.noteRange.first,
         last: parseInt(event.target.value, 10),
@@ -88,19 +115,24 @@ const PianoConfig = ({
     });
   };
 
-  const handleChangeInstrument = (event) => {
-    setConfig({
-      instrumentName: event.target.value,
+  const handleChangeInstrument = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    setPianoConfig({
+      instrumentName: event.target.value as InstrumentName,
     });
   };
 
   const { noteRange, instrumentName } = config;
 
+  if (!config) {
+    return null;
+  }
   return (
     <div className="max-w-2xl flex gap-4 flex-wrap">
       <DropdownMenu>
         <DropdownMenuTrigger>
-          <Button variant="default">{mode}</Button>{" "}
+          <Button variant="outline">{mode}</Button>{" "}
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem onClick={() => setMode("Preview Mode")}>
@@ -117,7 +149,7 @@ const PianoConfig = ({
           onChange={handleChangeFirstNote}
           value={noteRange.first}
         >
-          {MidiNumbers.NATURAL_MIDI_NUMBERS.map((midiNumber) => (
+          {MidiNumbers.NATURAL_MIDI_NUMBERS.map((midiNumber: number) => (
             <option
               value={midiNumber}
               disabled={midiNumber >= noteRange.last}
@@ -131,7 +163,7 @@ const PianoConfig = ({
       <div className="flex gap-2 items-center">
         <Label>Last note</Label>
         <AutoblurSelect onChange={handleChangeLastNote} value={noteRange.last}>
-          {MidiNumbers.NATURAL_MIDI_NUMBERS.map((midiNumber) => (
+          {MidiNumbers.NATURAL_MIDI_NUMBERS.map((midiNumber: number) => (
             <option
               value={midiNumber}
               disabled={midiNumber <= noteRange.first}
@@ -145,12 +177,11 @@ const PianoConfig = ({
       <div className="flex gap-2 items-center">
         <Label>Instrument</Label>
         <AutoblurSelect
-          className="instrument-dropdown"
           value={instrumentName}
           onChange={handleChangeInstrument}
         >
           {instrumentList.map((value) => (
-            <option value={value} key={value}>
+            <option value={value.toString()} key={value.toString()}>
               {value}
             </option>
           ))}

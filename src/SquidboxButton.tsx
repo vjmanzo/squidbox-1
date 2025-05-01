@@ -7,6 +7,7 @@ import PurpleButton from "./assets/purple.png";
 import PushedPurpleButton from "./assets/purple_pushed.png";
 import YellowButton from "./assets/yellow.png";
 import PushedYellowButton from "./assets/yellow_pushed.png";
+import { ButtonColor } from "./squidboxConfig";
 
 const SquidboxButton = ({
   color,
@@ -16,14 +17,30 @@ const SquidboxButton = ({
   onMouseLeave,
   onTouchStart,
   onTouchEnd,
+}: {
+  color: ButtonColor;
+  alt: string;
+  onMouseDown: () => void;
+  onMouseUp: () => void;
+  onMouseLeave: () => void;
+  onTouchStart: () => void;
+  onTouchEnd: () => void;
 }) => {
   const [isPushed, setIsPushed] = useState(false);
 
-  const buttonImages = {
-    red: isPushed ? PushedRedButton : RedButton,
-    green: isPushed ? PushedGreenButton : GreenButton,
-    purple: isPushed ? PushedPurpleButton : PurpleButton,
-    yellow: isPushed ? PushedYellowButton : YellowButton,
+  const getButtonImage = (color: ButtonColor): string => {
+    switch (color) {
+      case ButtonColor.RED:
+        return isPushed ? PushedRedButton : RedButton;
+      case ButtonColor.GREEN:
+        return isPushed ? PushedGreenButton : GreenButton;
+      case ButtonColor.PURPLE:
+        return isPushed ? PushedPurpleButton : PurpleButton;
+      case ButtonColor.YELLOW:
+        return isPushed ? PushedYellowButton : YellowButton;
+      default:
+        throw new Error("Invalid button color");
+    }
   };
 
   const handleMouseDown = () => {
@@ -53,14 +70,14 @@ const SquidboxButton = ({
 
   return (
     <img
-      src={buttonImages[color]}
+      src={getButtonImage(color)}
       alt={alt}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      style={{ cursor: "pointer" }}
+      className="cursor-pointer"
     />
   );
 };

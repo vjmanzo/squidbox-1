@@ -1,12 +1,20 @@
 import { useState, useEffect } from "react";
-import PropTypes from "prop-types";
+import { toast } from "sonner";
+import { InstrumentName } from "soundfont-player";
 
 const InstrumentListProvider = ({
   hostname,
   soundfont = "MusyngKite",
   render,
+}: {
+  hostname: string;
+  soundfont: "MusyngKite" | "FluidR3_GM";
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  render: Function;
 }) => {
-  const [instrumentList, setInstrumentList] = useState(null);
+  const [instrumentList, setInstrumentList] = useState<InstrumentName[] | null>(
+    null,
+  );
 
   useEffect(() => {
     const loadInstrumentList = async () => {
@@ -15,7 +23,7 @@ const InstrumentListProvider = ({
         const data = await response.json();
         setInstrumentList(data);
       } catch (error) {
-        console.error("Failed to load instrument list:", error);
+        toast.error("Failed to load instrument list: " + error);
       }
     };
 
@@ -23,12 +31,6 @@ const InstrumentListProvider = ({
   }, [hostname, soundfont]);
 
   return render(instrumentList);
-};
-
-InstrumentListProvider.propTypes = {
-  hostname: PropTypes.string.isRequired,
-  soundfont: PropTypes.oneOf(["MusyngKite", "FluidR3_GM"]),
-  render: PropTypes.func.isRequired,
 };
 
 export default InstrumentListProvider;

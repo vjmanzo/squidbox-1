@@ -1,27 +1,50 @@
 import { useState } from "react";
+import { useQueryState, parseAsJson } from "nuqs";
 import { Toaster } from "@/components/ui/sonner";
 import TopPanel from "./TopPanel";
 import BottomPanel from "./BottomPanel";
-import { DEFAULT_PRESETS, type Preset } from "./Preset";
+import {
+  DEFAULT_CONFIG,
+  type Preset,
+  SquidboxConfigSchema,
+} from "./squidboxConfig";
 
 function App() {
-  const [presets, setPresets] = useState<Preset[]>(DEFAULT_PRESETS);
+  const [squidboxConfig, setSquidBoxConfig] = useQueryState(
+    "config",
+    parseAsJson(SquidboxConfigSchema.parse).withDefault(DEFAULT_CONFIG),
+  );
   const [activePresetIndex, setActivePresetIndex] = useState(0);
+
+  const setPresets = (presets: Preset[]) => {
+    setSquidBoxConfig((prevConfig) => ({
+      ...prevConfig,
+      presets,
+    }));
+  };
 
   const handleSelectPreset = (index: number) => {
     setActivePresetIndex(index);
   };
 
   const handleDeletePreset = (index: number) => {
-    setPresets((prevPresets) => prevPresets.filter((_, i) => i !== index));
+    setSquidBoxConfig((prevConfig) => ({
+      ...prevConfig,
+      presets: prevConfig.presets.filter((_, i) => i !== index),
+    }));
     if (activePresetIndex === index) {
       setActivePresetIndex(0);
     }
   };
 
   const handleAddPreset = (preset: Preset) => {
-    setPresets((prevPresets) => [...prevPresets, preset]);
+    setSquidBoxConfig((prevConfig) => ({
+      ...prevConfig,
+      presets: [...prevConfig.presets, preset],
+    }));
   };
+
+  const presets = squidboxConfig.presets;
 
   return (
     <div className="h-screen flex flex-col">
@@ -37,7 +60,7 @@ function App() {
           onDeletePreset={handleDeletePreset}
         />
         <BottomPanel
-          presets={presets}
+          squidboxConfig={squidboxConfig}
           setPresets={setPresets}
           activePresetIndex={activePresetIndex}
         />
