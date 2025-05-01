@@ -324,10 +324,7 @@ const BottomPanel = ({
   };
 
   const handleShareConfig = async (type: "json" | "url") => {
-    const shareData: ShareData = {
-      title: "Squidbox Config",
-      text: "Here's a config for Squidbox!",
-    };
+    const shareData: ShareData = {};
 
     if (type === "json") {
       shareData.files = [
@@ -349,7 +346,9 @@ const BottomPanel = ({
         toast.error("Failed to share config: " + e);
       }
     } else {
-      toast.error("Sharing not supported on this device.");
+      toast.error(
+        "Sharing not supported on this browser. You can copy the URL or export the config file.",
+      );
     }
   };
 
