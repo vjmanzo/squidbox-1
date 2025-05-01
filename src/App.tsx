@@ -17,24 +17,39 @@ function App() {
   const [activePresetIndex, setActivePresetIndex] = useState(0);
 
   const setPresets = (presets: Preset[]) => {
-    setSquidBoxConfig((prevConfig) => ({
-      ...prevConfig,
-      presets,
-    }));
+    setSquidBoxConfig((prevConfig) => {
+      const newConfig = { ...prevConfig, presets };
+      // Ensure activePresetIndex is valid
+      if (activePresetIndex >= presets.length) {
+        setActivePresetIndex(Math.max(0, presets.length - 1));
+      }
+      return newConfig;
+    });
   };
 
   const handleSelectPreset = (index: number) => {
+    if (index < 0 || index >= squidboxConfig.presets.length) {
+      return;
+    }
+
     setActivePresetIndex(index);
   };
 
   const handleDeletePreset = (index: number) => {
-    setSquidBoxConfig((prevConfig) => ({
-      ...prevConfig,
-      presets: prevConfig.presets.filter((_, i) => i !== index),
-    }));
-    if (activePresetIndex === index) {
-      setActivePresetIndex(0);
+    if (0 > index || index >= squidboxConfig.presets.length) {
+      return;
     }
+
+    setSquidBoxConfig((prevConfig) => {
+      const updatedPresets = prevConfig.presets.filter((_, i) => i !== index);
+      // Adjust activePresetIndex if necessary
+      if (activePresetIndex >= updatedPresets.length) {
+        setActivePresetIndex(Math.max(0, updatedPresets.length - 1));
+      } else if (activePresetIndex === index) {
+        setActivePresetIndex(0);
+      }
+      return { ...prevConfig, presets: updatedPresets };
+    });
   };
 
   const handleAddPreset = (preset: Preset) => {

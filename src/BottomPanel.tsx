@@ -283,9 +283,7 @@ const BottomPanel = ({
     ) {
       return;
     }
-    const configString = JSON.stringify({
-      presets: presets,
-    });
+    const configString = JSON.stringify(squidboxConfig);
     const commandWithConfig = `SETCONF|${configString}`;
     daemon.writeSerial(serialPortOpen, `${commandWithConfig}\n`);
     setWaitingForResponse(true);
@@ -444,18 +442,9 @@ const BottomPanel = ({
           <Button
             variant="outline"
             onClick={() => {
-              const blob = new Blob(
-                [
-                  JSON.stringify(
-                    {
-                      presets: presets,
-                    },
-                    null,
-                    2,
-                  ),
-                ],
-                { type: "application/json" },
-              );
+              const blob = new Blob([JSON.stringify(squidboxConfig, null, 2)], {
+                type: "application/json",
+              });
               const url = URL.createObjectURL(blob);
               const link = document.createElement("a");
               link.href = url;
@@ -479,15 +468,7 @@ const BottomPanel = ({
                       text: "Here's a config for Squidbox!",
                       files: [
                         new File(
-                          [
-                            JSON.stringify(
-                              {
-                                presets: presets,
-                              },
-                              null,
-                              2,
-                            ),
-                          ],
+                          [JSON.stringify(squidboxConfig, null, 2)],
                           "squidbox-config.json",
                           { type: "application/json" },
                         ),
