@@ -6,25 +6,30 @@ import BottomPanel from "./BottomPanel";
 import {
   DEFAULT_CONFIG,
   type Preset,
+  type SquidboxConfig,
   SquidboxConfigSchema,
 } from "./squidboxConfig";
 
 function App() {
-  const [squidboxConfig, setSquidBoxConfig] = useQueryState(
+  const [squidboxConfig, setSquidboxConfig] = useQueryState(
     "config",
     parseAsJson(SquidboxConfigSchema.parse).withDefault(DEFAULT_CONFIG),
   );
   const [activePresetIndex, setActivePresetIndex] = useState(0);
 
-  const setPresets = (presets: Preset[]) => {
-    setSquidBoxConfig((prevConfig) => {
-      const newConfig = { ...prevConfig, presets };
+  const safeSetSquidboxConfig = (newConfig: SquidboxConfig) => {
+    setSquidboxConfig((prevConfig) => {
+      const updatedConfig = { ...prevConfig, ...newConfig };
       // Ensure activePresetIndex is valid
-      if (activePresetIndex >= presets.length) {
-        setActivePresetIndex(Math.max(0, presets.length - 1));
+      if (activePresetIndex >= updatedConfig.presets.length) {
+        setActivePresetIndex(Math.max(0, updatedConfig.presets.length - 1));
       }
-      return newConfig;
+      return updatedConfig;
     });
+  };
+
+  const setPresets = (presets: Preset[]) => {
+    safeSetSquidboxConfig({ presets });
   };
 
   const handleSelectPreset = (index: number) => {
@@ -40,7 +45,7 @@ function App() {
       return;
     }
 
-    setSquidBoxConfig((prevConfig) => {
+    setSquidboxConfig((prevConfig) => {
       const updatedPresets = prevConfig.presets.filter((_, i) => i !== index);
       // Adjust activePresetIndex if necessary
       if (activePresetIndex >= updatedPresets.length) {
@@ -53,7 +58,7 @@ function App() {
   };
 
   const handleAddPreset = (preset: Preset) => {
-    setSquidBoxConfig((prevConfig) => ({
+    setSquidboxConfig((prevConfig) => ({
       ...prevConfig,
       presets: [...prevConfig.presets, preset],
     }));
@@ -76,6 +81,7 @@ function App() {
         />
         <BottomPanel
           squidboxConfig={squidboxConfig}
+          setSquidboxConfig={safeSetSquidboxConfig}
           setPresets={setPresets}
           activePresetIndex={activePresetIndex}
         />

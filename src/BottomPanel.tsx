@@ -3,6 +3,8 @@ import { Piano, KeyboardShortcuts } from "react-piano";
 import "react-piano/dist/styles.css";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Toggle } from "@/components/ui/toggle";
 import SquidboxButton from "./SquidboxButton";
 import SoundfontProvider from "./SoundfontProvider";
@@ -13,6 +15,7 @@ import PianoConfig, {
 } from "./PianoConfig";
 import InstrumentListProvider from "./InstrumentListProvider";
 import {
+  DEFAULT_CONFIG,
   getButtonColorFromIndex,
   Preset,
   SquidboxConfig,
@@ -45,10 +48,12 @@ const scrollToBottom = (target: HTMLElement | null) => {
 
 const BottomPanel = ({
   squidboxConfig,
+  setSquidboxConfig,
   setPresets,
   activePresetIndex,
 }: {
   squidboxConfig: SquidboxConfig;
+  setSquidboxConfig: (config: SquidboxConfig) => void;
   setPresets: (presets: Preset[]) => void;
   activePresetIndex: number;
 }) => {
@@ -289,6 +294,65 @@ const BottomPanel = ({
     setWaitingForResponse(true);
   };
 
+  const handleResetConfig = () => {
+    setSquidboxConfig(DEFAULT_CONFIG);
+  };
+
+  const handleImportConfig = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    try {
+      const config = JSON.parse(text);
+      setSquidboxConfig(config);
+      toast.success("Config imported successfully.");
+    } catch (e) {
+      toast.error("Failed to import config " + e);
+    }
+  };
+
+  const handleExportConfig = () => {
+    const blob = new Blob([JSON.stringify(squidboxConfig, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "squidbox-config.json";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShareConfig = async (type: "json" | "url") => {
+    const shareData: ShareData = {
+      title: "Squidbox Config",
+      text: "Here's a config for Squidbox!",
+    };
+
+    if (type === "json") {
+      shareData.files = [
+        new File(
+          [JSON.stringify(squidboxConfig, null, 2)],
+          "squidbox-config.json",
+          { type: "application/json" },
+        ),
+      ];
+    } else if (type === "url") {
+      shareData.url = window.location.href;
+    }
+
+    if (navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        toast.success("Config shared successfully.");
+      } catch (e) {
+        toast.error("Failed to share config: " + e);
+      }
+    } else {
+      toast.error("Sharing not supported on this device.");
+    }
+  };
+
   if (!audioContext) {
     return <div>Click to initialize piano</div>;
   }
@@ -438,77 +502,39 @@ const BottomPanel = ({
       {/* Row 1, Column 3: Config Actions */}
       <div className="flex flex-col items-center justify-center gap-4">
         <h3 className="text-md font-medium">Config Tools</h3>
-        <div className="flex gap-4">
-          <Button
-            variant="outline"
-            onClick={() => {
-              const blob = new Blob([JSON.stringify(squidboxConfig, null, 2)], {
-                type: "application/json",
-              });
-              const url = URL.createObjectURL(blob);
-              const link = document.createElement("a");
-              link.href = url;
-              link.download = "squidbox-config.json";
-              link.click();
-              URL.revokeObjectURL(url);
-            }}
-          >
+        <div className="flex gap-4 items-end justify-center">
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="squidbox-config-import">Import Config</Label>
+            <Input
+              id="squidbox-config-import"
+              type="file"
+              accept="application/json"
+              onChange={handleImportConfig}
+            />
+          </div>
+          <Button variant="secondary" onClick={handleExportConfig}>
             Export Config
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger>
-              <Button variant="outline">Share Config</Button>
+              <Button variant="secondary">Share Config</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem
-                onClick={async () => {
-                  try {
-                    const shareData = {
-                      title: "Squidbox Config",
-                      text: "Here's a config for Squidbox!",
-                      files: [
-                        new File(
-                          [JSON.stringify(squidboxConfig, null, 2)],
-                          "squidbox-config.json",
-                          { type: "application/json" },
-                        ),
-                      ],
-                    };
-
-                    if (navigator.canShare && navigator.canShare(shareData)) {
-                      await navigator.share(shareData);
-                    } else {
-                      toast.error("Sharing not supported on this device.");
-                    }
-                  } catch (e) {
-                    toast.error("Failed to share config: " + e);
-                  }
-                }}
+                onClick={async () => await handleShareConfig("json")}
               >
                 JSON
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={async () => {
-                  try {
-                    const shareData = {
-                      title: "Squidbox Config",
-                      text: "Here's a config for Squidbox!",
-                      url: window.location.href,
-                    };
-                    if (navigator.canShare && navigator.canShare(shareData)) {
-                      await navigator.share(shareData);
-                    } else {
-                      toast.error("Sharing not supported on this device.");
-                    }
-                  } catch (e) {
-                    toast.error("Failed to share config: " + e);
-                  }
-                }}
+                onClick={async () => await handleShareConfig("url")}
               >
                 URL
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button variant="destructive" onClick={handleResetConfig}>
+            Reset Config
+          </Button>
         </div>
       </div>
       {/* Row 2, Columns 1-3 merged: Piano and Config */}
